@@ -1,203 +1,118 @@
-//@author 人工智能2201张杰 and ChatGPT
-#include <iostream>
-#include<vector>
-#include<stack>
-#include<queue>
-using namespace std;
-
-struct TreeNode {
-    int val;
-    TreeNode* left;
-    TreeNode* right;
-    TreeNode(int v){val = v; left = right = nullptr;}
-};
+#include<stdio.h>
+#include<string.h>
+#include<math.h>
 /*
-一开始的思路：
-    1( 2(3,(4,5)), 6(7,8(9,10)) )
-                 1
-               /   \  
-        2为父的树   6为父的树
-考虑到子树的多种可能情况，分类讨论实现起来比较麻烦，所以舍弃这种写法。
-TreeNode* createTree(string s){
-    
-    TreeNode* p = new TreeNode(s[0]);
-    p->val = s[0];
-    //提取出左子树对应字符串s1,右子树对应字符串s2
-    stack<char> stk;
-    int index;//记录逗号，确定分割出两个孩子的索引
-    int len = 3;//考虑只有一个孩子的情况，需要利用长度确定子串
-    for(int i = 1; i < s.size()-1; i++){//在 2(3,(4,5)), 6(7,8(9,10)) 中寻找分割的逗号
-        index = 0;
-        if(s[i] == '('){
-            stk.push(s[i]);
-            len++;
-        } 
-        else if(s[i] == ')'){
-            stk.pop();
-            len++;
-            if(stk.empty())break;
-        }
-        if(s[i] == ','){
-            len++;
-            if(stk.empty())index = i;
-        }
+分析：
 
-        if(index != 0)break;//找到逗号
-    }
+本题可用之前分析的Prim最小生成树来生成路径，之后的关键就是在找到这些边的时候记录下这些边，并算出需要等待的时间。
 
-    if(index != 0){
-        p->left = createTree(s.substr(2, index - 2));
-        string rs = s.substr(index+1);//s右半部分
-        p->right = createTree(s.substr(0,rs.size()-1));
-    }
-    else{
-        p->left = createTree(s.substr(2, index-2));
-        p->right = nullptr;
-    }
-    return p;
+需要等待的时间——
+
+若岛A直接连接到主岛，则A岛需要等待的时间就是二者的距离
+
+假设A通过B连接到主岛，
+
+如果A到B的边长小于B到主岛的边长，则A岛等的时间实际上是B到主岛的时间
+
+否则如果A到B的边长大于B到主岛的边长，则A岛等的时间是A岛修光缆到B岛的时间
+————————————————
+版权声明：本文为CSDN博主「puppylpg」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/puppylpg/article/details/41695677
+*/ 
+#define INF 0xfffffff							// infinity
+#define MAXSIZE 20
+ 
+int n;
+int people[MAXSIZE], point[MAXSIZE][2];			//point[]记录点的坐标位置
+double edge[MAXSIZE][MAXSIZE], time[MAXSIZE];	//因为每天铺一公里，所以time[]其实就是距离
+ 
+void Prim(double edge[][MAXSIZE], int u);
+double distance(int a, int b, int c, int d);
+ 
+int main()
+{
+	int i, j;
+	int sum_people = 0;
+	double sum_time = 0;
+ 
+	memset(edge, 0, sizeof(edge));				// void * memset (void * p,int c,size_t n)
+	scanf("%d", &n);
+	for(i = 1; i <= n; i++)						//读点的坐标和人数
+		scanf("%d%d%d", &point[i][0], &point[i][1], &people[i]);
+ 
+    for(i = 1; i <= n; i++)						//计算总人数
+        sum_people += people[i];
+ 
+	for(i = 1; i <= n; i++)						// 构造邻接矩阵
+		for(j = 1; j <= n; j++)
+			edge[i][j] = edge[j][i] = distance(point[i][0], point[i][1], point[j][0], point[j][1]);
+ 
+	Prim(edge, 1);						//Prim算法，从主岛（顶点1）开始
+ 
+	for(i=2; i<=n; i++)					//计算所有人等待的总时间（主岛除外），故i=2
+		sum_time += time[i] * people[i];
+ 
+	printf("%.2f\n", sum_time / sum_people);
+	return 0;
 }
-*/
-
-/*
-思路：使用堆栈存放上一级节点，遇到左括号则建立下层节点，右括号则弹栈
-*/
-TreeNode* createTree(string s){
-    stack<TreeNode*> st;
-
-    TreeNode* head = new TreeNode(s[0]-'0');//构建根节点
-    TreeNode* t = head;//指向上一个节点
-
-    int flag = 0;//逗号标志位
-
-    for(int i = 1; i < s.size(); i++){
-        //遇到左括号则把上一个节点压入栈中
-        if(s[i] == '('){
-            st.push(t);
-        }
-        //遇到右括号则top节点出栈
-        if(s[i] == ')'){
-            st.pop();
-        }
-        //遇到逗号则标志
-        if(s[i] == ',')flag = 1;
-        //遇到数字则建立节点
-        if(isdigit(s[i]) && flag == 0){
-            //数字处理
-            int num = s[i]-'0';
-            while(isdigit(s[++i])){
-                num = num * 10 + ( s[i] - '0');
-            }i--;
-
-            t = st.top();
-            t->left = new TreeNode(num);
-            t = t->left;
-        }
-        if(isdigit(s[i]) && flag == 1){
-            //数字处理
-            int num = s[i]-'0';
-            while(isdigit(s[++i])){
-                num = num * 10 + ( s[i] - '0');
-            }i--;
-
-            t = st.top();
-            t->right = new TreeNode(num);
-            t = t->right;
-
-            flag = 0;//flag置0，以后继续建立左节点
-        }
-    }
-    return head;
+ 
+void Prim(double edge[][MAXSIZE], int u)
+{
+	int nearvex[MAXSIZE] = {0};
+	double lowcost[MAXSIZE] = {0}, mincost = INF * 1.0;
+	int i, j;
+	int v = -1;
+	double weight = 0;
+ 
+	for(i=1; i<=n; i++)							//NO.1 对距离进行初始化
+	{
+		lowcost[i] = edge[u][i];
+		nearvex[i] = u;
+	}
+	lowcost[u] = 0;
+	nearvex[u] = -1;
+ 
+	for(i=1; i<n; i++)					//NO.4 循环n-1次，加入n-1个顶点
+	{
+        mincost = INF;		// very important!!!!! EVERY TIME mincost should be initialized to find the minimum
+		for(j=1; j<=n; j++)				//NO.3 更新距离，找到边的权值最小的那个点
+			if(nearvex[j] != -1 && lowcost[j] < mincost)
+			{
+				mincost = lowcost[j];
+				v = j;				//记录下这个边的权值最小的点
+			}
+ 
+		if(v != -1)					//如果找到那个点，进行NO.2
+		{
+	//		printf("%d--(%f)-->%d\n", nearvex[v], lowcost[v], v);   //打印加入的流程
+//****************************************************************************************************************
+//相对于最小生成树的关键代码：
+			if(nearvex[v] == u)				//若毗邻主岛，直接将时间（距离）更新为边长
+				time[v] = lowcost[v];
+			else if(lowcost[v] <= time[ nearvex[v] ])
+				time[v] = time[ nearvex[v] ];
+				else
+					time[v] = lowcost[v];
+//假设A通过B连接到主岛，如果A到B的边长小于B到主岛的边长，则A岛等的时间实际上是B到主岛的时间
+//否则如果A到B的边长大于B到主岛的边长，则A岛等的时间是A岛修光缆到B岛的时间
+//****************************************************************************************************************
+ 
+			nearvex[v] = -1;					//将点加入T2
+			weight += lowcost[v];
+ 
+			for(j=1; j<=n; j++)					//加入后，对距离进行更新
+			{
+				if(nearvex[j] != -1 && edge[v][j] < lowcost[j])
+				{
+					lowcost[j] = edge[v][j];
+					nearvex[j] = v;
+				}
+			}
+		}
+	}
 }
-
-
-
-/*
-思路：使用vector存储每一层并将每一层放入栈中，最后弹出栈中所有元素
-示意图
-void levelOrder(TreeNode* root){
-stack
-    |4 5 6 7|
-    |2 3    |  <--vector2
-    |1      |  <--vector1
-    |———————|
-    stack<vector<TreeNode*>> s;
-    TreeNode* p = root;
-    while(p != nullptr){
-        vector<TreeNode*> v;
-        if(s.empty()){//如果栈s为空，则s单成数组，压入栈
-            v.push_back(p);
-            s.push(v);
-        }else{//如果s不为空，则依次遍历栈顶的数组元素（父亲节点层）并将下层孩子放入数组，压入栈
-            vector<TreeNode*> v_before = s.top();
-            for(int i = 0; i < v_before.size(); i++){
-                TreeNode* ptr = v_before.at(i);
-                v.push_back(ptr->left);
-                v.push_back(ptr->right);
-            }
-            s.push(v);
-        }
-    }
-
-    //取栈s中每一层数组v，输出该层元素
-    while(!s.empty()){
-        vector<TreeNode*> v = s.top();
-        for(int i = 0; i < v.size(); i++){
-            cout<<v.at(i)->val;
-        }
-        cout<<'\n';
-        s.pop();
-    }
-
-}
-*/
-
-
-/* 
-@author GPT（此函数参考了ChatGPT）
-Chatgpt给出了 广度优先搜索+队列的写法
-要从下至上按层遍历二叉树并每层单独输出一行，可以使用广度优先搜索（BFS）算法和队列来实现。
-*/
-void levelOrderTraversal(TreeNode* root) {
-    vector<int> v;
-    if (root == NULL)
-        return;
-    
-    queue<TreeNode*> q;
-    q.push(root);
-    
-    while (!q.empty()) {
-        int levelSize = q.size();
-        
-        for (int i = 0; i < levelSize; ++i) {
-            TreeNode* node = q.front();
-            q.pop();
-            
-            // 输出节点值
-            // cout << node->val << " ";
-            v.push_back(node->val);//存入vector中
-            
-            // 将右、左子节点加入队列
-            if (node->right)
-                q.push(node->right);
-            if (node->left)
-                q.push(node->left);
-
-        }
-        
-        // cout << endl;  // 换行
-        v.push_back(-1);//将换行标志（-1）存入数组中
-    }
-    v.pop_back();//去除最后一个换行
-    for(vector<int>::reverse_iterator it = v.rbegin(); it != v.rend(); it++){
-        if(*it == -1)cout<<endl;
-        else cout<<*it<<' ';
-    }
-}
-
-int main() {
-    string s;
-    cin>>s;
-    TreeNode* root = createTree(s);
-    levelOrderTraversal(root);
-    return 0;
+ 
+double distance(int a, int b, int c, int d)
+{
+	return sqrt( (a-c)*(a-c) + (b-d)*(b-d) );
 }
