@@ -25,7 +25,9 @@ void heap_sort(int arr[], int n) {
   
 int main() {  
     int n;
+    printf("enter the n:");
     scanf("%d",&n);
+    printf("enter n nums:");
     int arr[n];
     for(int i = 0; i < n; i++)scanf("%d",&arr[i]);
     heap_sort(arr, n);  

@@ -31,9 +31,10 @@ void quick_sort(int a[], int l, int r, int first_flag){
 }
 
 int main(){
-    printf("只有"); 
+
     //input
     int n;
+    printf("enter the n and n nums:");
     scanf("%d",&n);
     int a[n];
     for(int i = 0; i < n; i++)scanf("%d",&a[i]);
