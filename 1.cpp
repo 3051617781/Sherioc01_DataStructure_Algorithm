@@ -1,13 +1,13 @@
-//@author 人工智能2201 张杰
+//@author zhangjie
 #include<stdio.h>
 using namespace std;
 
 void quick_sort(int a[], int l, int r, int first_flag){
-    int first_flag_index = 0; //首次排序后中间元素的位置
+    int first_flag_index = 0; //the flag of first sort, middle element
     if(l<r){
         int i = l;
         int j = r;
-        int flag = a[i]; //标记元素
+        int flag = a[i]; //flag     
         while(i<j){
             while(i<j && a[j] >= flag){
                 j--;
@@ -31,13 +31,14 @@ void quick_sort(int a[], int l, int r, int first_flag){
 }
 
 int main(){
-    //输入数据
+    printf("只有"); 
+    //input
     int n;
     scanf("%d",&n);
     int a[n];
     for(int i = 0; i < n; i++)scanf("%d",&a[i]);
-    //快排
+    //quick_sort
     quick_sort(a,0,n-1,0);
-    //输出
+    //output
     for(int i = 0; i < n; i++)printf("%d ",a[i]);
 }
